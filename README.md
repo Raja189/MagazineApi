@@ -1,0 +1,2 @@
+# MagazineApi
+Magazine Subscribe
