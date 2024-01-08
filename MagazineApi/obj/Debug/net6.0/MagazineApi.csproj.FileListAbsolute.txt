@@ -1,0 +1,17 @@
+C:\MagazineSubsribe\MagazineApi\bin\Debug\net6.0\MagazineApi.exe
+C:\MagazineSubsribe\MagazineApi\bin\Debug\net6.0\MagazineApi.deps.json
+C:\MagazineSubsribe\MagazineApi\bin\Debug\net6.0\MagazineApi.runtimeconfig.json
+C:\MagazineSubsribe\MagazineApi\bin\Debug\net6.0\MagazineApi.dll
+C:\MagazineSubsribe\MagazineApi\bin\Debug\net6.0\MagazineApi.pdb
+C:\MagazineSubsribe\MagazineApi\bin\Debug\net6.0\Newtonsoft.Json.dll
+C:\MagazineSubsribe\MagazineApi\obj\Debug\net6.0\MagazineApi.csproj.AssemblyReference.cache
+C:\MagazineSubsribe\MagazineApi\obj\Debug\net6.0\MagazineApi.GeneratedMSBuildEditorConfig.editorconfig
+C:\MagazineSubsribe\MagazineApi\obj\Debug\net6.0\MagazineApi.AssemblyInfoInputs.cache
+C:\MagazineSubsribe\MagazineApi\obj\Debug\net6.0\MagazineApi.AssemblyInfo.cs
+C:\MagazineSubsribe\MagazineApi\obj\Debug\net6.0\MagazineApi.csproj.CoreCompileInputs.cache
+C:\MagazineSubsribe\MagazineApi\obj\Debug\net6.0\MagazineApi.csproj.CopyComplete
+C:\MagazineSubsribe\MagazineApi\obj\Debug\net6.0\MagazineApi.dll
+C:\MagazineSubsribe\MagazineApi\obj\Debug\net6.0\refint\MagazineApi.dll
+C:\MagazineSubsribe\MagazineApi\obj\Debug\net6.0\MagazineApi.pdb
+C:\MagazineSubsribe\MagazineApi\obj\Debug\net6.0\MagazineApi.genruntimeconfig.cache
+C:\MagazineSubsribe\MagazineApi\obj\Debug\net6.0\ref\MagazineApi.dll
