@@ -1,125 +1,119 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Text.Json;
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace MagazineSubscriptionApp
 {
-   static class Program
+    static class Program
     {
-        static string baseUrl = "http://magazinestore.azurewebsites.net";
+        static readonly string baseUrl = "http://magazinestore.azurewebsites.net";
+        static readonly HttpClient httpClient = new HttpClient();
 
-        // using asynchronous calls for paralleizing the Api calls
         static async Task Main(string[] args)
         {
-            // Get token
             string token = await GetTokenAsync();
-
-            // Get categories
             List<string> categories = await GetCategoriesAsync(token);
 
-            // Get magazines for each category
-            Dictionary<string, List<Magazine>> magazinesByCategory = new Dictionary<string, List<Magazine>>();
-            foreach (var category in categories)
-            {
-                List<Magazine> magazines = await GetMagazinesAsync(token, category);
-                magazinesByCategory.Add(category, magazines);
-            }
+            var magazinesByCategoryTasks = categories.Select(category => GetMagazinesAsync(token, category));
+            var magazinesByCategory = (await Task.WhenAll(magazinesByCategoryTasks))
+                .ToDictionary(result => result.Key, result => result.Value);
 
-            // Get subscribers and their subscriptions
             List<Subscriber> subscribers = await GetSubscribersAsync(token);
 
-            // Identify subscribers with at least one subscription in each category
             List<string> qualifiedSubscriberIds = IdentifyQualifiedSubscribers(subscribers, magazinesByCategory);
 
-            // Submit the answer
             await SubmitAnswerAsync(token, qualifiedSubscriberIds);
         }
-        // Async 
+
         static async Task<string> GetTokenAsync()
         {
-            using (HttpClient client = new HttpClient())
+            try
             {
-                string tokenEndpoint = $"{baseUrl}/api/token";
-                HttpResponseMessage response = await client.GetAsync(tokenEndpoint);
+                HttpResponseMessage response = await httpClient.GetAsync($"{baseUrl}/api/token").ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
-                string jsonResult = await response.Content.ReadAsStringAsync();
+                string jsonResult = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 var tokenResult = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonResult);
 
-                if (tokenResult.TryGetValue("token", out var token))
+                if (tokenResult?.TryGetValue("token", out var token) == true)
                 {
                     return token.ToString();
                 }
-                else
-                    return "";
+
+                return string.Empty;
             }
-            
+            catch (Exception ex)
+            {
+                // Handle or log the exception
+                Console.WriteLine($"Error in GetTokenAsync: {ex.Message}");
+                return string.Empty;
+            }
         }
 
         static async Task<List<string>> GetCategoriesAsync(string token)
         {
-            using (HttpClient client = new HttpClient())
+            try
             {
-                string categoriesEndpoint = $"{baseUrl}/api/categories/{token}";
-                HttpResponseMessage response = await client.GetAsync(categoriesEndpoint);
+                HttpResponseMessage response = await httpClient.GetAsync($"{baseUrl}/api/categories/{token}").ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
-                string jsonResult = await response.Content.ReadAsStringAsync();
+                string jsonResult = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 var jsonDocument = JsonDocument.Parse(jsonResult);
 
-                if (jsonDocument.RootElement.TryGetProperty("data", out var dataElement))
-                {
-                    return dataElement.EnumerateArray().Select(categoryElement => categoryElement.GetString()).ToList();
-                }
-                else
-                    return null;
+                return jsonDocument.RootElement.TryGetProperty("data", out var dataElement)
+                    ? dataElement.EnumerateArray().Select(categoryElement => categoryElement.GetString()).ToList()
+                    : null;
+            }
+            catch (Exception ex)
+            {
+                // Handle or log the exception
+                Console.WriteLine($"Error in GetCategoriesAsync: {ex.Message}");
+                return null;
             }
         }
 
-        static async Task<List<Magazine>> GetMagazinesAsync(string token, string category)
+        static async Task<KeyValuePair<string, List<Magazine>>> GetMagazinesAsync(string token, string category)
         {
-            using (HttpClient client = new HttpClient())
+            try
             {
-                string magazinesEndpoint = $"{baseUrl}/api/magazines/{token}/{category}";
-                HttpResponseMessage response = await client.GetAsync(magazinesEndpoint);
+                HttpResponseMessage response = await httpClient.GetAsync($"{baseUrl}/api/magazines/{token}/{category}").ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
-                string jsonResult = await response.Content.ReadAsStringAsync();
+                string jsonResult = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 var jsonDocument = JsonDocument.Parse(jsonResult);
 
-                if (jsonDocument.RootElement.TryGetProperty("data", out var dataElement))
-                {
-                    var result = JsonSerializer.Deserialize<List<Magazine>>(dataElement.GetRawText());
-                    return result;
-                }
-                else
-                    return null;
+                return jsonDocument.RootElement.TryGetProperty("data", out var dataElement)
+                    ? new KeyValuePair<string, List<Magazine>>(category, JsonSerializer.Deserialize<List<Magazine>>(dataElement.GetRawText()))
+                    : default;
+            }
+            catch (Exception ex)
+            {
+                // Handle or log the exception
+                Console.WriteLine($"Error in GetMagazinesAsync for category {category}: {ex.Message}");
+                return default;
             }
         }
 
         static async Task<List<Subscriber>> GetSubscribersAsync(string token)
         {
-            using (HttpClient client = new HttpClient())
+            try
             {
-                string subscribersEndpoint = $"{baseUrl}/api/subscribers/{token}";
-                HttpResponseMessage response = await client.GetAsync(subscribersEndpoint);
+                HttpResponseMessage response = await httpClient.GetAsync($"{baseUrl}/api/subscribers/{token}").ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
-                string jsonResult = await response.Content.ReadAsStringAsync();
+                string jsonResult = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 var jsonDocument = JsonDocument.Parse(jsonResult);
 
-                if (jsonDocument.RootElement.TryGetProperty("data", out var dataElement))
-                {
-                    return JsonSerializer.Deserialize<List<Subscriber>>(dataElement.GetRawText());
-                }
-                else
-                    return null;
-
+                return jsonDocument.RootElement.TryGetProperty("data", out var dataElement)
+                    ? JsonSerializer.Deserialize<List<Subscriber>>(dataElement.GetRawText())
+                    : null;
+            }
+            catch (Exception ex)
+            {
+                // Handle or log the exception
+                Console.WriteLine($"Error in GetSubscribersAsync: {ex.Message}");
+                return null;
             }
         }
-
 
         static List<string> IdentifyQualifiedSubscribers(List<Subscriber> subscribers, Dictionary<string, List<Magazine>> magazinesByCategory)
         {
@@ -140,23 +134,27 @@ namespace MagazineSubscriptionApp
 
             return qualifiedSubscriberIds;
         }
+
         static async Task SubmitAnswerAsync(string token, List<string> qualifiedSubscriberIds)
         {
-            using (HttpClient client = new HttpClient())
+            try
             {
                 string answersEndpoint = $"{baseUrl}/api/answer/{token}";
 
-                // Set the content type header to application/json
-                client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                httpClient.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
 
-                // Serialize the list to JSON
                 var content = new StringContent(JsonSerializer.Serialize(qualifiedSubscriberIds), Encoding.UTF8, "application/json");
 
-                HttpResponseMessage response = await client.PostAsync(answersEndpoint, content);
+                HttpResponseMessage response = await httpClient.PostAsync(answersEndpoint, content).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
 
-                var result = await response.Content.ReadAsStringAsync();
+                var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 Console.WriteLine(result);
+            }
+            catch (Exception ex)
+            {
+                // Handle or log the exception
+                Console.WriteLine($"Error in SubmitAnswerAsync: {ex.Message}");
             }
         }
     }
